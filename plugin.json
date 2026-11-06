@@ -1,0 +1,8 @@
+{
+  "id": "perch-spine",
+  "name": "Spine 渲染器",
+  "version": "0.1.0",
+  "apiVersion": 1,
+  "renderers": ["spine"],
+  "main": "index.js"
+}

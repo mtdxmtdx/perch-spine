@@ -1,0 +1,12 @@
+node_modules/
+dist/
+
+# 游戏素材只留在本地，绝不进仓库
+ykn/
+models/
+*.skel
+*.skel.bytes
+*.atlas
+*.atlas.txt
+*.asset
+*.png
