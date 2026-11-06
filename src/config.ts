@@ -11,35 +11,38 @@ export interface SpineConfig {
   group: string;
   /** 模型原本朝左时打开 */
   flip: boolean;
-  /** 播 sit 时骨骼的纵向偏移（骨骼坐标），让坐姿贴住窗口顶边 */
-  sitOffsetY: number;
+  /** 播 sit 时骨骼的纵向偏移（骨骼坐标），让座位贴住窗口顶边、腿垂在下面；不写就按身高估 */
+  sitOffsetY?: number;
   /** 画面基准高度（逻辑像素） */
   height: number;
   /** 贴图是否预乘透明度；不写就看图集的 pma */
   pma?: boolean;
   /** 逐个状态覆盖动作名 */
   anims: Record<string, string>;
+  /** 不画的部件（图集里的区域名） */
+  hide: string[];
 }
 
 /** 每个状态依次尝试的动作名，{g} 换成性格分组 */
 export const DEFAULT_ANIMS: Record<string, string[]> = {
-  idle: ["{g}_idle_0"],
+  idle: ["{g}_idle_0", "{g}_idle1_0", "mob_idle_0"],
   walk_right: ["mob_walk_0"],
   walk_left: ["mob_walk_0"],
-  wave: ["{g}_talk_1"],
+  wave: ["{g}_lough_0", "{g}_smile_0", "{g}_talk_2"],
   talk: ["{g}_talk_1"],
-  jump: ["{g}_surprised_0"],
-  fall: ["{g}_surprised_0"],
-  land: ["{g}_idle_0"],
-  drag: ["{g}_surprised_0"],
-  sleep: ["{g}_sleepy_0"],
+  // 模型里有的分组拼成 suprised
+  jump: ["{g}_surprised_0", "{g}_suprised_0"],
+  fall: ["{g}_surprised_0", "{g}_suprised_0"],
+  land: ["{g}_idle_0", "{g}_idle1_0"],
+  drag: ["{g}_panic_0", "{g}_surprised_0", "{g}_suprised_0"],
+  sleep: ["{g}_sleepy_0", "{g}_sleepy1_0"],
   sit: ["{g}_sit_sit_1", "{g}_sit_sit_2"],
-  listen: ["{g}_idle_0"],
-  think: ["{g}_shy_0"],
-  working: ["{g}_dance"],
-  attention: ["{g}_surprised_0"],
-  error: ["{g}_sad_0"],
-  done: ["{g}_idle_0"],
+  listen: ["{g}_listen_0"],
+  think: ["{g}_question_0", "{g}_question1_0"],
+  working: ["{g}_idle2_0", "{g}_uttori_0"],
+  attention: ["{g}_surprised_0", "{g}_suprised_0"],
+  error: ["{g}_sad_0", "{g}_sad1_0"],
+  done: ["{g}_lough_0", "{g}_smile_0", "{g}_uttori_0"],
 };
 
 export function parseConfig(raw: unknown): SpineConfig {
@@ -60,10 +63,11 @@ export function parseConfig(raw: unknown): SpineConfig {
     skin: typeof o.skin === "string" && o.skin.trim() ? o.skin.trim() : "default",
     group: typeof o.group === "string" && o.group.trim() ? o.group.trim() : "cute",
     flip: o.flip === true,
-    sitOffsetY: typeof o.sitOffsetY === "number" ? o.sitOffsetY : 0,
+    sitOffsetY: typeof o.sitOffsetY === "number" ? o.sitOffsetY : undefined,
     height: typeof o.height === "number" && o.height > 0 ? o.height : 208,
     pma: typeof o.pma === "boolean" ? o.pma : undefined,
     anims,
+    hide: Array.isArray(o.hide) ? o.hide.filter((h): h is string => typeof h === "string") : ["shadow"],
   };
 }
 

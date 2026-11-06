@@ -8,7 +8,7 @@ test("spine.json：缺文件名报错，其余用默认值", () => {
   assert.throws(() => parseConfig({ atlas: "a" }), /skeleton/);
   assert.throws(() => parseConfig(null), /对象/);
   const c = parseConfig(base);
-  assert.deepEqual([c.skin, c.group, c.flip, c.sitOffsetY, c.height, c.pma], ["default", "cute", false, 0, 208, undefined]);
+  assert.deepEqual([c.skin, c.group, c.flip, c.sitOffsetY, c.height, c.pma], ["default", "cute", false, undefined, 208, undefined]);
 });
 
 test("动作：按性格分组拼名字，找不到退回待机", () => {
@@ -20,10 +20,10 @@ test("动作：按性格分组拼名字，找不到退回待机", () => {
 });
 
 test("动作：anims 覆盖优先，写错的名字不生效", () => {
-  const cfg = parseConfig({ ...base, anims: { talk: "x_talk", wave: "nope" } });
-  const r = resolveAnims(cfg, ["idle", "talk", "wave"], ["cute_idle_0", "cute_talk_1", "x_talk"]);
+  const cfg = parseConfig({ ...base, anims: { talk: "x_talk", sleep: "nope" } });
+  const r = resolveAnims(cfg, ["idle", "talk", "sleep"], ["cute_idle_0", "cute_sleepy_0", "x_talk"]);
   assert.equal(r.map.talk, "x_talk");
-  assert.equal(r.map.wave, "cute_talk_1");
+  assert.equal(r.map.sleep, "cute_sleepy_0");
 });
 
 test("动作：没有坐姿不能坐；连待机都没有时用第一个动作", () => {

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<title>perch-spine 预览</title>
+<style>
+  body { margin: 0; font: 14px system-ui; background: #2b2d31; color: #ddd; display: flex; gap: 16px; padding: 16px; }
+  #stage { position: relative; background: repeating-conic-gradient(#999 0 25%, #666 0 50%) 0 0 / 24px 24px; outline: 1px solid #000; }
+  #host { width: 100%; height: 100%; }
+  .line { position: absolute; left: 0; right: 0; height: 1px; pointer-events: none; }
+  #foot { background: #0f0; }
+  #top { background: #f0f; }
+  #states button { margin: 2px; }
+  pre { white-space: pre-wrap; font-size: 12px; max-width: 420px; }
+</style>
+</head>
+<body>
+<div id="stage"><div id="host"></div><div class="line" id="foot"></div><div class="line" id="top"></div></div>
+<div>
+  <div id="states"></div>
+  <pre id="log"></pre>
+</div>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

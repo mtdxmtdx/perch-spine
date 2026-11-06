@@ -10,3 +10,4 @@ models/
 *.atlas.txt
 *.asset
 *.png
+.claude/
