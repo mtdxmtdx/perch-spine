@@ -115,6 +115,12 @@ export class SpineRenderer {
     this.setAnim(false);
   }
 
+  /** Perch 告诉我们的朝向，跳跃时也有；旧版 Perch 不调用，就只靠 walk_left / walk_right */
+  face(dir: "left" | "right") {
+    this.facing = dir === "right" ? 1 : -1;
+    this.applyFacing();
+  }
+
   onHit(cb: (u: unknown) => void) {
     this.hitCb = cb;
   }
@@ -149,8 +155,13 @@ export class SpineRenderer {
     const name = l.anims[this.anim] ?? l.anims.idle;
     if (first || l.state.getCurrent(0)?.animation?.name !== name) l.state.setAnimation(0, name, true);
     l.skeleton.y = this.anim === "sit" ? l.sitY : 0;
-    l.skeleton.scaleX = this.facing * (l.cfg.flip ? -1 : 1);
+    this.applyFacing();
     this.forceMask = true;
+  }
+
+  private applyFacing() {
+    const l = this.loaded;
+    if (l) l.skeleton.scaleX = this.facing * (l.cfg.flip ? -1 : 1);
   }
 
   private tick = (now: number) => {
