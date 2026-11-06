@@ -9,7 +9,7 @@ export interface SpineConfig {
   skin: string;
   /** 性格分组，默认动作名里的 {g} */
   group: string;
-  /** 模型原本朝左时打开 */
+  /** 模型原本朝左（BanG Dream! 的模板都是）；原本朝右的模型写 false */
   flip: boolean;
   /** 播 sit 时骨骼的纵向偏移（骨骼坐标），让座位贴住窗口顶边、腿垂在下面；不写就按身高估 */
   sitOffsetY?: number;
@@ -62,7 +62,7 @@ export function parseConfig(raw: unknown): SpineConfig {
     atlas: text("atlas"),
     skin: typeof o.skin === "string" && o.skin.trim() ? o.skin.trim() : "default",
     group: typeof o.group === "string" && o.group.trim() ? o.group.trim() : "cute",
-    flip: o.flip === true,
+    flip: o.flip !== false,
     sitOffsetY: typeof o.sitOffsetY === "number" ? o.sitOffsetY : undefined,
     height: typeof o.height === "number" && o.height > 0 ? o.height : 208,
     pma: typeof o.pma === "boolean" ? o.pma : undefined,

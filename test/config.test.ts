@@ -8,7 +8,7 @@ test("spine.json：缺文件名报错，其余用默认值", () => {
   assert.throws(() => parseConfig({ atlas: "a" }), /skeleton/);
   assert.throws(() => parseConfig(null), /对象/);
   const c = parseConfig(base);
-  assert.deepEqual([c.skin, c.group, c.flip, c.sitOffsetY, c.height, c.pma], ["default", "cute", false, undefined, 208, undefined]);
+  assert.deepEqual([c.skin, c.group, c.flip, c.sitOffsetY, c.height, c.pma], ["default", "cute", true, undefined, 208, undefined]);
 });
 
 test("动作：按性格分组拼名字，找不到退回待机", () => {

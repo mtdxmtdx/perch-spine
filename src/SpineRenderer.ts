@@ -55,7 +55,8 @@ export class SpineRenderer {
   private raf = 0;
   private lastDraw = 0;
   private anim = "idle";
-  private facing = 1;
+  /** 1 朝右，-1 朝左；走路时跟着方向变，停下保持 */
+  private facing = -1;
   private forceMask = false;
 
   constructor(private api: PluginApi) {
