@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { parseConfig, resolveAnims } from "../src/config.ts";
+import { nextSeated, parseConfig, resolveAnims } from "../src/config.ts";
 
 const base = { skeleton: "a.skel", atlas: "a.atlas.txt" };
 
@@ -24,6 +24,28 @@ test("动作：anims 覆盖优先，写错的名字不生效", () => {
   const r = resolveAnims(cfg, ["idle", "talk", "sleep"], ["cute_idle_0", "cute_sleepy_0", "x_talk"]);
   assert.equal(r.map.talk, "x_talk");
   assert.equal(r.map.sleep, "cute_sleepy_0");
+});
+
+test("坐姿：安静时不用聊天动作，说话时才用；没有坐姿版的用安静坐姿", () => {
+  const cfg = parseConfig({ ...base, group: "cool" });
+  const r = resolveAnims(cfg, ["idle", "sit"], ["cool_idle1_0", "cool_idle1_sit_0", "cool_sit_sit_1", "cool_sad1_sit_0"]);
+  assert.equal(r.map.sit, "cool_idle1_sit_0");
+  assert.equal(r.seated.talk, "cool_sit_sit_1");
+  assert.equal(r.seated.error, "cool_sad1_sit_0");
+  assert.equal(r.seated.think, "cool_idle1_sit_0");
+});
+
+test("坐姿：anims 用 sit_<状态> 覆盖", () => {
+  const cfg = parseConfig({ ...base, anims: { sit_talk: "x" } });
+  assert.equal(resolveAnims(cfg, ["idle"], ["cute_idle_0", "cute_sit_sit_1", "x"]).seated.talk, "x");
+});
+
+test("坐姿：说话、思考时继续坐着，走路、下落、待机算站起来", () => {
+  assert.equal(nextSeated(false, "sit"), true);
+  assert.equal(nextSeated(true, "talk"), true);
+  assert.equal(nextSeated(true, "think"), true);
+  assert.equal(nextSeated(false, "talk"), false);
+  for (const a of ["idle", "walk_left", "fall", "drag", "sleep"]) assert.equal(nextSeated(true, a), false);
 });
 
 test("动作：没有坐姿不能坐；连待机都没有时用第一个动作", () => {

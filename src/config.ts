@@ -36,7 +36,8 @@ export const DEFAULT_ANIMS: Record<string, string[]> = {
   land: ["{g}_idle_0", "{g}_idle1_0"],
   drag: ["{g}_panic_0", "{g}_surprised_0", "{g}_suprised_0"],
   sleep: ["{g}_sleepy_0", "{g}_sleepy1_0"],
-  sit: ["{g}_sit_sit_1", "{g}_sit_sit_2"],
+  // sit_sit 是坐着聊天的动作，嘴一直在动，安静坐着要用 idle_sit
+  sit: ["{g}_idle_sit_0", "{g}_idle1_sit_0", "{g}_sit_sit_1", "{g}_sit_sit_2"],
   listen: ["{g}_listen_0"],
   think: ["{g}_question_0", "{g}_question1_0"],
   working: ["{g}_idle2_0", "{g}_uttori_0"],
@@ -44,6 +45,22 @@ export const DEFAULT_ANIMS: Record<string, string[]> = {
   error: ["{g}_sad_0", "{g}_sad1_0"],
   done: ["{g}_lough_0", "{g}_smile_0", "{g}_uttori_0"],
 };
+
+/** 坐着时这些状态不用站起来，换成坐姿版的动作；anims 里用 sit_<状态> 覆盖 */
+export const SEATED_ANIMS: Record<string, string[]> = {
+  talk: ["{g}_sit_sit_1", "{g}_sit_sit_2"],
+  think: ["{g}_question_sit_0", "{g}_question1_sit_0"],
+  listen: ["{g}_listen_sit_0"],
+  working: ["{g}_idle2_sit_0"],
+  attention: ["{g}_panic_sit_0"],
+  error: ["{g}_sad_sit_0", "{g}_sad1_sit_0"],
+  done: ["{g}_lough_sit_0", "{g}_smile_sit_0", "{g}_uttori_sit_0"],
+};
+
+/** Perch 只告诉我们状态名，坐着说话时发的也是 talk：坐下后，遇到别的动作才算站起来 */
+export function nextSeated(seated: boolean, anim: string): boolean {
+  return anim === "sit" || (seated && anim in SEATED_ANIMS);
+}
 
 export function parseConfig(raw: unknown): SpineConfig {
   if (typeof raw !== "object" || raw === null) throw new Error("spine.json 必须是一个对象");
@@ -74,6 +91,8 @@ export function parseConfig(raw: unknown): SpineConfig {
 export interface AnimMap {
   /** 状态名 → 动作名；没有对应动作的状态退回 idle */
   map: Record<string, string>;
+  /** 坐着时的状态名 → 动作名；没有坐姿版的用安静坐姿 */
+  seated: Record<string, string>;
   /** 退回 idle 的状态 */
   missing: string[];
   canSit: boolean;
@@ -96,5 +115,11 @@ export function resolveAnims(cfg: SpineConfig, states: readonly string[], availa
     if (!name) missing.push(state);
     map[state] = name ?? idle;
   }
-  return { map, missing, canSit: find("sit") !== undefined };
+  const seated: Record<string, string> = {};
+  for (const [state, names] of Object.entries(SEATED_ANIMS)) {
+    const own = cfg.anims[`sit_${state}`];
+    const name = own && has.has(own) ? own : names.map((n) => n.replaceAll("{g}", cfg.group)).find((n) => has.has(n));
+    seated[state] = name ?? map.sit ?? idle;
+  }
+  return { map, seated, missing, canSit: find("sit") !== undefined };
 }

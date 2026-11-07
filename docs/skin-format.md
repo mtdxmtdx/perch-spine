@@ -61,7 +61,7 @@
 | `drag` | `{g}_panic_0`，然后同上 |
 | `land` | `{g}_idle_0`、`{g}_idle1_0` |
 | `sleep` | `{g}_sleepy_0`、`{g}_sleepy1_0` |
-| `sit` | `{g}_sit_sit_1`、`{g}_sit_sit_2`，有才会坐在窗沿上 |
+| `sit` | `{g}_idle_sit_0`、`{g}_idle1_sit_0`、`{g}_sit_sit_1`，有才会坐在窗沿上 |
 | `listen` | `{g}_listen_0` |
 | `think` | `{g}_question_0`、`{g}_question1_0` |
 | `working` | `{g}_idle2_0`、`{g}_uttori_0` |
@@ -69,3 +69,19 @@
 | `done` | `{g}_lough_0`、`{g}_smile_0`、`{g}_uttori_0` |
 
 找不到的状态用待机代替，并在控制台记一条警告。
+
+## 坐着时的动作
+
+坐下后，下面这些状态不会站起来，而是换成坐姿版。`sit_sit_1` 是坐着聊天的动作，嘴一直在动，所以只用在说话时。在 `anims` 里用 `sit_<状态>` 覆盖，比如 `{ "sit_talk": "cool_sit_sit_2" }`。
+
+| 状态 | 动作 |
+|---|---|
+| `talk` | `{g}_sit_sit_1`、`{g}_sit_sit_2` |
+| `think` | `{g}_question_sit_0`、`{g}_question1_sit_0` |
+| `listen` | `{g}_listen_sit_0` |
+| `working` | `{g}_idle2_sit_0` |
+| `attention` | `{g}_panic_sit_0` |
+| `error` | `{g}_sad_sit_0`、`{g}_sad1_sit_0` |
+| `done` | `{g}_lough_sit_0`、`{g}_smile_sit_0`、`{g}_uttori_sit_0` |
+
+没有坐姿版的就用安静坐姿。
