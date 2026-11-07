@@ -17,7 +17,7 @@ import {
   TextureAtlas,
   type TextureAtlasRegion,
 } from "@esotericsoftware/spine-webgl";
-import { parseConfig, resolveAnims, type SpineConfig } from "./config.ts";
+import { nextSeated, parseConfig, resolveAnims, type SpineConfig } from "./config.ts";
 import { computeFrame, type Box, type Frame, unionBox } from "./layout.ts";
 import type { LiveMask, PluginApi, SkinSource } from "./types.ts";
 
@@ -40,6 +40,7 @@ interface Loaded {
   skeleton: Skeleton;
   state: AnimationState;
   anims: Record<string, string>;
+  seatedAnims: Record<string, string>;
   frame: Frame;
   sitY: number;
   pma: boolean;
@@ -57,6 +58,7 @@ export class SpineRenderer {
   private anim = "idle";
   /** 1 朝右，-1 朝左；走路时跟着方向变，停下保持 */
   private facing = -1;
+  private seated = false;
   private forceMask = false;
 
   constructor(private api: PluginApi) {
@@ -92,16 +94,16 @@ export class SpineRenderer {
     else console.warn(`[spine] 没有皮肤 ${cfg.skin}，用默认皮肤`);
     skeleton.setToSetupPose();
 
-    const { map, missing, canSit } = resolveAnims(cfg, this.api.anims, data.animations.map((a) => a.name));
+    const { map, seated, missing, canSit } = resolveAnims(cfg, this.api.anims, data.animations.map((a) => a.name));
     if (missing.length) console.warn(`[spine] 这些状态没有对应动作，用待机代替：${missing.join("、")}`);
 
     const pma = cfg.pma ?? atlas.pages.some((p) => p.pma);
-    const { frame, sitY } = this.measure(data, skeleton, map, cfg, pma);
+    const { frame, sitY } = this.measure(data, skeleton, map, seated, cfg, pma);
     const stateData = new AnimationStateData(data);
     stateData.defaultMix = MIX_SECONDS;
 
     this.dispose();
-    this.loaded = { cfg, atlas, skeleton, state: new AnimationState(stateData), anims: map, frame, sitY, pma };
+    this.loaded = { cfg, atlas, skeleton, state: new AnimationState(stateData), anims: map, seatedAnims: seated, frame, sitY, pma };
     this.live.reset();
     this.setAnim(true);
 
@@ -152,9 +154,10 @@ export class SpineRenderer {
     if (!l) return;
     if (this.anim === "walk_right") this.facing = 1;
     if (this.anim === "walk_left") this.facing = -1;
-    const name = l.anims[this.anim] ?? l.anims.idle;
+    this.seated = nextSeated(this.seated, this.anim);
+    const name = this.seated ? (l.seatedAnims[this.anim] ?? l.anims.sit) : (l.anims[this.anim] ?? l.anims.idle);
     if (first || l.state.getCurrent(0)?.animation?.name !== name) l.state.setAnimation(0, name, true);
-    l.skeleton.y = this.anim === "sit" ? l.sitY : 0;
+    l.skeleton.y = this.seated ? l.sitY : 0;
     this.applyFacing();
     this.forceMask = true;
   }
@@ -202,7 +205,7 @@ export class SpineRenderer {
    * 量出待机姿势和所有用到的动作实际占的范围。部件图带透明边，只看顶点会偏大，
    * 所以先用顶点圈个大概，再把每个姿势画一遍、读不透明的像素。
    */
-  private measure(data: SkeletonData, skeleton: Skeleton, map: Record<string, string>, cfg: SpineConfig, pma: boolean) {
+  private measure(data: SkeletonData, skeleton: Skeleton, map: Record<string, string>, seated: Record<string, string>, cfg: SpineConfig, pma: boolean) {
     const pose = (name: string, t: number, y: number) => {
       skeleton.setToSetupPose();
       skeleton.y = y;
@@ -210,10 +213,12 @@ export class SpineRenderer {
       skeleton.updateWorldTransform();
     };
     const poses: [string, number, boolean][] = [];
-    for (const [state, name] of Object.entries(map)) {
+    const addPoses = (name: string, sit: boolean) => {
       const duration = data.findAnimation(name)!.duration;
-      for (const f of [0, 0.25, 0.5, 0.75]) poses.push([name, duration * f, state === "sit"]);
-    }
+      for (const f of [0, 0.25, 0.5, 0.75]) poses.push([name, duration * f, sit]);
+    };
+    for (const [state, name] of Object.entries(map)) addPoses(name, state === "sit");
+    for (const name of Object.values(seated)) addPoses(name, true);
 
     let range: Box = { minX: -1, minY: -1, maxX: 1, maxY: 1 };
     for (const [name, t] of poses) {
