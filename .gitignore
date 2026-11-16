@@ -11,3 +11,6 @@ models/
 *.asset
 *.png
 .claude/
+
+# 对话记录副本
+*.jsonl
